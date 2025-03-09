@@ -48,8 +48,36 @@ public:
 		void FindObject();
 	
 	//Sets the camera component to the player
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	UCameraComponent* PlayerCamComp;
+
+	//Establishes the variable for health and can be changed within the blueprint class.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Stats")
+		float Health = 100.0f;
+
+	//Establishes the variable for hunger and can be changed within the blueprint class.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Stats")
+		float Hunger = 100.0f;
+
+	//Establishes the variable for stamina and can be changed within the blueprint class.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Stats")
+		float Stamina = 100.0f;
+
+	//Sets a custom event for health that starts decreasing when hunger is 0.
+	UFUNCTION(BlueprintCallable)
+		void SetHealth(float amount);
+
+	//Sets a custom event for hunger that starts decreasing health when it hits 0.
+	UFUNCTION(BlueprintCallable)
+		void SetHunger(float amount);
+
+	//Sets a custom event for stamina
+	UFUNCTION(BlueprintCallable)
+		void SetStamina(float amount);
+
+	//Sets a custom event for a timer that starts decreasing stats over time.
+	UFUNCTION()
+		void DecreaseStats();
 
 
 };
