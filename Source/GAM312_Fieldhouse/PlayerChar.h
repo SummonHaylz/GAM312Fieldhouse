@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Camera/CameraComponent.h"
+#include "Resource_M.h"
 #include "PlayerChar.generated.h"
 
 UCLASS()
@@ -63,6 +64,26 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Stats")
 		float Stamina = 100.0f;
 
+	//Sets up an integer for Wood
+	UPROPERTY(EditAnywhere, Category = "Resources")
+		int Wood;
+
+	//Sets up an integer for Stone
+	UPROPERTY(EditAnywhere, Category = "Resources")
+		int Stone;
+
+	//Sets up an integer for Berries
+	UPROPERTY(EditAnywhere, Category = "Resources")
+		int Berry;
+
+	//Sets up the number of resources in an array
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Resources")
+	TArray<int> ResourcesArray;
+
+	//Sets up the resources names in an array where the first array is wood followed by stone then berries
+	UPROPERTY(EditAnywhere, Category = "Resources")
+	TArray<FString> ResourcesNameArray;
+
 	//Sets a custom event for health that starts decreasing when hunger is 0.
 	UFUNCTION(BlueprintCallable)
 		void SetHealth(float amount);
@@ -78,6 +99,10 @@ public:
 	//Sets a custom event for a timer that starts decreasing stats over time.
 	UFUNCTION()
 		void DecreaseStats();
+
+	//Sets a custom event for getting resources
+	UFUNCTION()
+		void GiveResource(float amount, FString resourceType);
 
 
 };
