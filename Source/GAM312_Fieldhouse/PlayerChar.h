@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Camera/CameraComponent.h"
 #include "Resource_M.h"
+#include "kismet/GameplayStatics.h"
 #include "PlayerChar.generated.h"
 
 UCLASS()
@@ -83,6 +84,10 @@ public:
 	//Sets up the resources names in an array where the first array is wood followed by stone then berries
 	UPROPERTY(EditAnywhere, Category = "Resources")
 	TArray<FString> ResourcesNameArray;
+
+	//Creates a new material interface
+	UPROPERTY(EditAnywhere, Category="HitMarker")
+		UMaterialInterface* hitDecal;
 
 	//Sets a custom event for health that starts decreasing when hunger is 0.
 	UFUNCTION(BlueprintCallable)
