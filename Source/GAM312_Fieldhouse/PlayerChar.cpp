@@ -127,8 +127,8 @@ void APlayerChar::FindObject()
 		//Casts to the resource
 		AResource_M* HitResource = Cast<AResource_M>(HitResult.GetActor());
 
-		//Ensures the editor does not crash if a resource is not hit
-		if (HitResource)
+		//Ensures the editor does not crash if a resource is not hit and runs if stamina is greater than 5
+		if (Stamina > 5.0f)
 		{
 			//Gets the hit name of the resource that was collected
 			FString hitName = HitResource->resourceName;
@@ -145,9 +145,15 @@ void APlayerChar::FindObject()
 				//Lists the resource value and hit name in Fstring
 				GiveResource(resourceValue, hitName);
 
-				//CHecks to see if the player is hitting
+				//Checks to see if the player is hitting
 				check(GEngine != nullptr)
 					GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Resource Collected"));
+
+				//Calls the decal at location and specifies the size and rotation as well as lifespan
+				UGameplayStatics::SpawnDecalAtLocation(GetWorld(), hitDecal, FVector(10.0f, 10.0f, 10.0f), HitResult.Location, FRotator(-90, 0, 0), 2.0f);
+
+				//Sets the new stamina to have 5 less
+				SetStamina(-5.0f);
 			}
 			//Destroys the resource if depleted
 			else
