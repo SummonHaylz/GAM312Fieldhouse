@@ -18,6 +18,8 @@ APlayerChar::APlayerChar()
 	//Share rotation with controller.
 	PlayerCamComp->bUsePawnControlRotation = true;
 
+	//Establishes the building array
+	BuildingArray.SetNum(3);
 	//Establishes the resource arrays element is set to 3 since there are 3 resources
 	ResourcesArray.SetNum(3);
 	ResourcesNameArray.Add(TEXT("Wood"));
@@ -41,6 +43,18 @@ void APlayerChar::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	//Sets conditions on if building
+	if (isBuilding)
+	{
+		//Sets conditions on if a part is spawned and allows the player to place the part and follows the camera
+		if (spawnedPart)
+		{
+			FVector StartLocation = PlayerCamComp->GetComponentLocation();
+			FVector Direction = PlayerCamComp->GetForwardVector() * 400.0f;
+			FVector EndLocation = StartLocation * Direction;
+			spawnedPart->SetActorLocation(EndLocation);
+		}
+	}
 }
 
 // Called to bind functionality to input
@@ -67,6 +81,9 @@ void APlayerChar::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 	//Binds the action to interact if LMB is clicked
 	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &APlayerChar::FindObject);
+
+	//Rotates buildings
+	PlayerInputComponent->BindAction("RotPart", IE_Pressed, this, &APlayerChar::RotateBuilding);
 }
 
 void APlayerChar::MoveForward(float axisValue)
@@ -121,48 +138,58 @@ void APlayerChar::FindObject()
 	//Returns the face to normal
 	QueryParams.bReturnFaceIndex = true;
 
-	//Performs the line tracing
-	if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams))
+	//Sets if building is not true then line tracing can continue
+	if (!isBuilding)
 	{
-		//Casts to the resource
-		AResource_M* HitResource = Cast<AResource_M>(HitResult.GetActor());
-
-		//Ensures the editor does not crash if a resource is not hit and runs if stamina is greater than 5
-		if (Stamina > 5.0f)
+		//Performs the line tracing
+		if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams))
 		{
-			//Gets the hit name of the resource that was collected
-			FString hitName = HitResource->resourceName;
+			//Casts to the resource
+			AResource_M* HitResource = Cast<AResource_M>(HitResult.GetActor());
 
-			//Gets the resource value and checks for the resource amount in the hit resource
-			int resourceValue = HitResource->resourceAmount;
-
-			//Calculates the new resource value
-			HitResource->totalResource = HitResource->totalResource - resourceValue;
-
-			//Only runs if there is a total resouce left
-			if (HitResource->totalResource > resourceValue)
+			//Ensures the editor does not crash if a resource is not hit and runs if stamina is greater than 5
+			if (Stamina > 5.0f)
 			{
-				//Lists the resource value and hit name in Fstring
-				GiveResource(resourceValue, hitName);
+				//Gets the hit name of the resource that was collected
+				FString hitName = HitResource->resourceName;
 
-				//Checks to see if the player is hitting
-				check(GEngine != nullptr)
-					GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Resource Collected"));
+				//Gets the resource value and checks for the resource amount in the hit resource
+				int resourceValue = HitResource->resourceAmount;
 
-				//Calls the decal at location and specifies the size and rotation as well as lifespan
-				UGameplayStatics::SpawnDecalAtLocation(GetWorld(), hitDecal, FVector(10.0f, 10.0f, 10.0f), HitResult.Location, FRotator(-90, 0, 0), 2.0f);
+				//Calculates the new resource value
+				HitResource->totalResource = HitResource->totalResource - resourceValue;
 
-				//Sets the new stamina to have 5 less
-				SetStamina(-5.0f);
-			}
-			//Destroys the resource if depleted
-			else
-			{
-				HitResource->Destroy();
-				check(GEngine != nullptr)
-					GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Resource Depleted"));
+				//Only runs if there is a total resouce left
+				if (HitResource->totalResource > resourceValue)
+				{
+					//Lists the resource value and hit name in Fstring
+					GiveResource(resourceValue, hitName);
+
+					//Checks to see if the player is hitting
+					check(GEngine != nullptr)
+						GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Resource Collected"));
+
+					//Calls the decal at location and specifies the size and rotation as well as lifespan
+					UGameplayStatics::SpawnDecalAtLocation(GetWorld(), hitDecal, FVector(10.0f, 10.0f, 10.0f), HitResult.Location, FRotator(-90, 0, 0), 2.0f);
+
+					//Sets the new stamina to have 5 less
+					SetStamina(-5.0f);
+				}
+				//Destroys the resource if depleted
+				else
+				{
+					HitResource->Destroy();
+					check(GEngine != nullptr)
+						GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Resource Depleted"));
+				}
 			}
 		}
+	}
+	//Stops the tick event
+	else
+	{
+		isBuilding = false;
+		
 	}
 }
 
@@ -230,6 +257,67 @@ void APlayerChar::GiveResource(float amount, FString resourceType)
 	{
 		ResourcesArray[2] = ResourcesArray[2] + amount;
 	}
+}
+
+void APlayerChar::UpdateResources(float woodAmount, float stoneAmount, FString buildingObject)
+{	
+	if (woodAmount <= ResourcesArray[0])
+	{
+		//Subtracts the resources in order to build the object
+		ResourcesArray[0] = ResourcesArray[0] - woodAmount;
+		ResourcesArray[1] = ResourcesArray[1] - stoneAmount;
+		//Adds one to the building object dependent on the type
+		if (buildingObject == "Wall")
+		{
+			BuildingArray[0] = BuildingArray[0] + 1;
+		}
+		if (buildingObject == "Floor")
+		{
+			BuildingArray[1] = BuildingArray[1] + 1;
+		}
+		if (buildingObject == "Ceiling")
+		{
+			BuildingArray[2] = BuildingArray[2] + 1;
+		}
+	}
+}
+
+void APlayerChar::SpawnBuilding(int buildingID, bool& isSuccess)
+{
+	//Executes if not building
+	if (!isBuilding)
+	{
+		//Checks to see if the building array has a particular object
+		if (BuildingArray[buildingID] >= 1)
+		{
+			//Sets that the player is building
+			isBuilding = true;
+
+			//Sets spawn location
+			FActorSpawnParameters SpawnParams;
+			FVector StartLocation = PlayerCamComp->GetComponentLocation();
+			FVector Direction = PlayerCamComp->GetForwardVector() * 400.0f;
+			FVector EndLocation = StartLocation + Direction;
+			FRotator myRot(0, 0, 0);
+
+			//Subtracts 1 from the building array for the spawned part
+			BuildingArray[buildingID] = BuildingArray[buildingID] - 1;
+
+			//Spawns in the part from TSubclassOf<ABuildingPart> and sets it to the children of the class as well.
+			spawnedPart = GetWorld()->SpawnActor<ABuildingPart>(BuildPartClass, EndLocation, myRot, SpawnParams);
+
+			//Shows if the actions were successful
+			isSuccess = true;
+		}
+		//Shows if the actions were not successful
+		isSuccess = false;
+	}
+}
+
+void APlayerChar::RotateBuilding()
+{
+	//Sets the rotation
+	spawnedPart->AddActorWorldRotation(FRotator(0, 90, 0));
 }
 
 
