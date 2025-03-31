@@ -8,6 +8,7 @@
 #include "Resource_M.h"
 #include "kismet/GameplayStatics.h"
 #include "BuildingPart.h"
+#include "PlayerWidget.h"
 #include "PlayerChar.generated.h"
 
 UCLASS()
@@ -105,6 +106,10 @@ public:
 	//Sets a variable to the spawned blueprint to be managed
 	UPROPERTY()
 		ABuildingPart* spawnedPart;
+
+	//Sets the ability to reference the player widget
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UPlayerWidget* playerUI;
 
 	//Sets a custom event for health that starts decreasing when hunger is 0.
 	UFUNCTION(BlueprintCallable)
