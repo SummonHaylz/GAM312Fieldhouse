@@ -46,7 +46,7 @@ void APlayerChar::Tick(float DeltaTime)
 	playerUI->UpdateBars(Health, Hunger, Stamina);
 
 	//Sets conditions on if building
-	if (isBuilding)
+	if (!isBuilding)
 	{
 		//Sets conditions on if a part is spawned and allows the player to place the part and follows the camera
 		if (spawnedPart)
