@@ -9,6 +9,7 @@
 #include "kismet/GameplayStatics.h"
 #include "BuildingPart.h"
 #include "PlayerWidget.h"
+#include "ObjectiveWidget.h"
 #include "PlayerChar.generated.h"
 
 UCLASS()
@@ -110,6 +111,16 @@ public:
 	//Sets the ability to reference the player widget
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UPlayerWidget* playerUI;
+
+	//Sets up variables for the objective widget that can be edited and called upon
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UObjectiveWidget* objWidget;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float objectsBuilt;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float matsCollected;
 
 	//Sets a custom event for health that starts decreasing when hunger is 0.
 	UFUNCTION(BlueprintCallable)

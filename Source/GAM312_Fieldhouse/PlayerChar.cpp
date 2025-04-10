@@ -35,6 +35,13 @@ void APlayerChar::BeginPlay()
 	//Sets a timer that calls on the DecreaseStats function that goes into effect every two seconds and affects the player character.
 	FTimerHandle StatsTimerHandle;
 	GetWorld()->GetTimerManager().SetTimer(StatsTimerHandle, this, &APlayerChar::DecreaseStats, 2.0f, true);
+
+	//if object widget is valid then then the initial values for the two functions are set to keep track of them
+	if (objWidget)
+	{
+		objWidget->updatebuildObj(0.0f);
+		objWidget->UpdatematOBJ(0.0f);
+	}
 	
 }
 
@@ -46,14 +53,14 @@ void APlayerChar::Tick(float DeltaTime)
 	playerUI->UpdateBars(Health, Hunger, Stamina);
 
 	//Sets conditions on if building
-	if (!isBuilding)
+	if (isBuilding)
 	{
 		//Sets conditions on if a part is spawned and allows the player to place the part and follows the camera
 		if (spawnedPart)
 		{
 			FVector StartLocation = PlayerCamComp->GetComponentLocation();
 			FVector Direction = PlayerCamComp->GetForwardVector() * 400.0f;
-			FVector EndLocation = StartLocation * Direction;
+			FVector EndLocation = StartLocation + Direction;
 			spawnedPart->SetActorLocation(EndLocation);
 		}
 	}
@@ -148,6 +155,8 @@ void APlayerChar::FindObject()
 		{
 			//Casts to the resource
 			AResource_M* HitResource = Cast<AResource_M>(HitResult.GetActor());
+			if (!HitResource)
+				return;
 
 			//Ensures the editor does not crash if a resource is not hit and runs if stamina is greater than 5
 			if (Stamina > 5.0f)
@@ -166,6 +175,11 @@ void APlayerChar::FindObject()
 				{
 					//Lists the resource value and hit name in Fstring
 					GiveResource(resourceValue, hitName);
+
+					//sets the mats collected to towards objectives then updates the widget
+					matsCollected = matsCollected + resourceValue;
+
+					objWidget->UpdatematOBJ(matsCollected);
 
 					//Checks to see if the player is hitting
 					check(GEngine != nullptr)
@@ -187,11 +201,13 @@ void APlayerChar::FindObject()
 			}
 		}
 	}
-	//Stops the tick event
+	//Stops the tick event adds one to objects built and updates the widget
 	else
 	{
 		isBuilding = false;
-		
+		objectsBuilt = objectsBuilt + 1.0f;
+
+		objWidget->updatebuildObj(objectsBuilt);
 	}
 }
 
@@ -202,6 +218,10 @@ void APlayerChar::SetHealth(float amount)
 	{
 		Health = Health + amount;
 	}
+	else 
+	{
+		Health = 100;
+	}
 }
 
 void APlayerChar::SetHunger(float amount)
@@ -211,6 +231,10 @@ void APlayerChar::SetHunger(float amount)
 	{
 		Hunger = Hunger + amount;
 	}
+	else
+	{
+		Hunger = 100;
+	}
 }
 
 void APlayerChar::SetStamina(float amount)
@@ -219,6 +243,10 @@ void APlayerChar::SetStamina(float amount)
 	if (Stamina + amount < 100)
 	{
 		Stamina = Stamina + amount;
+	}
+	else
+	{
+		Stamina = 100;
 	}
 }
 
