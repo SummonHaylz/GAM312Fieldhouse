@@ -14,7 +14,7 @@ class GAM312_FIELDHOUSE_API UObjectiveWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
-	//Sets thle functions for UpatematOBJ and updatebuildObj to public so they can be called anywhere. These will update both objectives.
+	//Sets the functions for UpatematOBJ and updatebuildObj to public so they can be called anywhere. These will update both objectives.
 public:
 	UFUNCTION(BlueprintImplementableEvent)
 		void UpdatematOBJ(float matsCollected);
